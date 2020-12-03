@@ -1,0 +1,19 @@
+---
+title: "commentsPerMonth"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+DATASET_DIR="../datasets/"
+posts <- read.csv(paste(DATASET_DIR, "Posts.csv", sep=""))
+comments <- read.csv(paste(DATASET_DIR, 'Comments.csv', sep=""))
+library(dplyr)
+library(stringr)
+```
+
+Pour commencer il faut extraire les données des dates venant des commentaires puis on utilise un barplot pour représenter les occurences de chaque mois.
+
+```{r}
+dates = str_match(comments$CreationDate, "^20[0-9]{2}-([0-9]{2})")[,2]
+barplot(table(dates))
+```

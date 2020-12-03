@@ -6,6 +6,11 @@ output: pdf_document
 ---
 
 ```{r setup, include=FALSE}
+DATASET_DIR="../datasets/"
+posts <- read.csv(paste(DATASET_DIR, "Posts.csv", sep=""))
+library(dplyr)
+library(stringr)
+
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
@@ -21,3 +26,18 @@ knitr::opts_chunk$set(echo = TRUE)
 
 Les données que nous avons récupérées pour le projet étaient en XML (langage de balisage très utilisé). Or en R, il est beaucoup plus simple d'importer les données en csv.  
 Nous avons donc décider de coder un parser de XML vers CSV, ce script 
+
+## Les tags les plus présents
+```{r}
+postsWithTags = subset(posts, grepl("^(<.*>)+$", posts$Tags))
+tagsToParse <- str_extract_all(postsWithTags$Tags, "<([a-zA-Z0-9\\-]+)>")
+tags <- c()
+
+for (tag in tagsToParse) {
+  tags <- cbind(tags, tag)
+}
+
+freq(tags)
+
+```
+

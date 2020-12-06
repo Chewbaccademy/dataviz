@@ -1,0 +1,113 @@
+---
+title: "Comment être aidé"
+author: "Kilian DEBRAUX Anthony QUERE"
+date: "06/12/2020"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+library(dplyr)
+
+# récupération des données sur les tags et les posts
+data_tags <- read.csv("../datasets/tags.csv", sep=";")
+data_posts <- read.csv("../datasets/posts.csv", sep=";")
+
+# mise en forme des données
+row.names(data_tags) <- data_tags$TagName
+data_tags$nb_rep <- rep(0, nrow(data_tags))
+
+# récupération des tags sur chaque posts
+tags <- c()
+posts <- subset(data_posts, PostTypeId == 1)
+toParseTags <- str_match_all(posts$Tags, "<([a-zA-Z0-9\\-]+)>")
+for (toParseTag in toParseTags){
+  tags <- c(tags, toParseTag[,2])
+}
+```
+
+# Problématique
+
+Sur stackoverflow, on pose une question, et des gens nous répondent. C'est ainsi que l'on peut être aidé dans la résolution d'un problème si quelqu'un d'autre voit notre réponse.
+
+Pour classifier les différentes questions, on peut leur ajouter des tags, c'est à dire des mots clés qui permettent de trouver facilement le post. Par exemple, on a le tag "bug", ce tag peut être ajouté à tous les post qui demande à ce qu'on résolve un bug dans un programme. Ainsi, les codeur qui veulent aider d'autre peuvent faire une recherche des posts contenant ce tag et essayer d'aider l'auteur.
+
+Ainsi, on peut penser que certains tags sont plus susceptible d'attirer l'attention de gens voulant aider (comme le tag "bug", ou "help-center")
+
+C'est ce que nous allons nous demander : Quels tags sont le plus susceptibles de nous apporter des réponses ?
+
+Attention, on pourrait prendre cette étude pour un classement des tags à mettre pour être aider. Or non, il faut bien sûr que le tag corresponde au sujet (ou vous ne serez pas aidé), mais il faut bien vérifier que votre demande rentre dans les tags que nous allons voir car, si c'est le cas, vous pourrez être aidé plus rapidement.
+
+
+## répartition des tags dans stackoverflow
+
+La première chose que nous devrions étudier est la répartition des différents tags dans le site. Si certains sont plus utilisés que d'autres, il faudra prendre ça en compte dans nos statistiques. De plus nous pourrons voir si les tags qui apportent le plus de réponses sont ceux les plus utilisés ou au contraire l'inverse.
+
+```{r}
+# tableau de féquence des tags pour faire apparaître les plus utilisés
+tagsFreqPlus <- subset(freq(tags, sort = "dec"), `%` > 1)
+# tableau de féquence des tags pour faire apparaître les moins utilisés
+tagsFreqMinus <- subset(freq(tags, sort = "inc"), n <= 1)
+# affichage des piecharts
+pie(c(tagsFreqPlus$`%`, 100 - sum(tagsFreqPlus$`%`)), labels = c(row.names(tagsFreqPlus), "others"), main = "Graphique de répartition des tags", col = c("#0077ff", "#9e68f2", "#df54d6", "#ff46b0", "#ff4c87", "#ff665e", "#ff8636", "#ffa600"), radius = 1)
+```
+
+Voici la répartition des tags. Ce graphique n'est pas très lisible, du au fait que l'on arrive très vite à des tags qui représentent moins de 1% en tout (ici, tous les tags qui représentent moins de 1% des posts sont dans "others"). Pour y vois plus clair, nous allons prendre uniquement les tags qui représentent plus de 1% (ceux qui sont affichés au dessus à part "others") et voir leur répartition entre eux
+
+```{r}
+pie(tagsFreqPlus$n, labels = row.names(tagsFreqPlus), main = "Graphique de répartition des tags parmis ceux à plus de 1%", col = c("#0077ff", "#9e68f2", "#df54d6", "#ff46b0", "#ff4c87", "#ff665e", "#ff8636", "#ffa600"), radius = 1, cex=0.7)
+```
+Ce graphique est plus lisible, mais nous avons encore du réduire la police des labels pour qu'il le soit.
+
+On peut donc enfin voir les tags les plus utilisés, Cela pourra nous être utile par la suite pour nos analyses.
+
+Nous disposons aussi du tableau de fréquence des tags du moins utilisé au plus utilisé (le représentation sous forme de graphique est inutile)
+
+```{r}
+tagsFreqMinus
+```
+
+
+## analyse du nombre de réponses en fonction des tags
+
+Maintenant, pour savoir quels tags sont susceptibles de nous aider, il faut savoir lesquels apportent le plus de réponses. En effet, plus les gens répondent à notre post, plus nous avons de chances de trouver la solution à notre problème. Pour cela, nous allons compter combien il existe de réponses pour chaque tags :
+
+```{r}
+# récupération des réponses groupée par post auquel elles répondent
+postAnswers <- subset(data_posts, PostTypeId == 2)
+answers <- split(postAnswers, postAnswers$ParentId)
+for (ans in answers){
+  for (tag in str_match_all(subset(posts, Id == ans$ParentId[1])$Tags, "<([a-zA-Z0-9\\-]+)>")[[1]][,2]){
+    data_tags[tag, 3] = data_tags[tag, 3] + 1
+  }
+}
+```
+
+Une fois les données récupérées, on peut les afficher, il risque d'y avoir beaucoup de données à afficher, on va donc afficher les 10 premiers tags qui ont le plus de réponses :
+
+```{r}
+pie(tagsFreqPlus$n[1:10], labels = row.names(tagsFreqPlus), main = "Graphique de répartition des tags parmis ceux à plus de 1%", col = c("#0077ff", "#9e68f2", "#df54d6", "#ff46b0", "#ff4c87", "#ff665e", "#ff8636", "#ffa600"), radius = 1, cex=0.7)
+```
+
+
+
+## R Markdown
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+
+```{r cars}
+summary(cars)
+```
+
+## Including Plots
+
+You can also embed plots, for example:
+
+```{r pressure, echo=FALSE}
+plot(pressure)
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.

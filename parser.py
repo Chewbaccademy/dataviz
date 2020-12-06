@@ -1,7 +1,7 @@
 import sys
 import xml.etree.ElementTree as ET
 
-SEPARATOR = ","
+SEPARATOR = ";"
 
 def xmltocsv(filename, columns):
     """
@@ -18,7 +18,7 @@ def xmltocsv(filename, columns):
         for col in columns:
             if col in attributes:
                 line += attributes[col]
-            line+=","
+            line+=SEPARATOR
         results.append(line[:-1] + "\n")
     
     return results
@@ -31,6 +31,8 @@ def writecsv(filename, data, columns):
     fn = '.'.join(filename.split(".")[:-1]) + ".csv"
 
     file = open(fn, 'w')
+    textCol = columns.split(',')
+    columns = SEPARATOR.join(textCol)
     file.write(columns + '\n')
     for d in data:
         file.write(d)

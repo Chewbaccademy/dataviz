@@ -6,11 +6,22 @@ output: pdf_document
 ---
 
 ```{r setup, include=FALSE}
-DATASET_DIR="../projet2/projet2/datasets/"
-posts <- read.csv(paste(DATASET_DIR, "Posts3.csv", sep=""))
-tags <- read.csv(paste(DATASET_DIR, "Tags.csv", sep=""))
+DATASET_DIR="../datasets/"
+posts <- read.csv(paste(DATASET_DIR, "Posts.csv", sep=""), sep = ",")
+tags <- read.csv(paste(DATASET_DIR, "Tags.csv", sep=""), sep = ",")
 library(dplyr)
 library(stringr)
+library(questionr)
+
+# mise en forme des données
+row.names(tags) <- tags$TagName
+tags$nb <- rep(0, nrow(tags))
+tags$nb_rep <- rep(0, nrow(tags))
+tags$rep_pond <- rep(0, nrow(tags))
+tags$nb_re_a <- rep(0, nrow(tags))
+tags$rep_pond_a <- rep(0, nrow(tags))
+
+posts_2 <- subset(posts, PostTypeId == 1)
 
 knitr::opts_chunk$set(echo = TRUE)
 ```
@@ -199,6 +210,185 @@ pie(i, l)
 ```
 
 On remarque directement la dominance des ide de microsoft **Visual Studio** et **Visual Studio Code**. Le premier est essentiellement utilisé pourdévelopper en C, C# et C++ et le second est de très loin l'ide le plus populaire. Il peut être utilisé pour pratiquement tous les langages et frameworks et est très adaptable avec de nombreux plugins pour utiliser Git, Docker, R, ... In tellij est aussi très populaire, dans a version IDEA il peut même être plus puisant que Visual Studio Code sous certains aspets notement dans le dévelppement d'appliations regroupant plusieurs technologies comme une API en Spring, un client en React et une base de donnée PostgreSQL, cependant il est payant et donc moins utilisé. Eclipse est très utilisé pour le java mais l'entreprise a de moins en moins de succès et cet ide est de moins en mois utilisé. Atom et Visual Studio Code ressemblent à Visual Studio Code mais permettent moins de choses.
+
+
+# Problématique
+
+Sur stackoverflow, on pose une question, et des gens nous répondent. C'est ainsi que l'on peut être aidé dans la résolution d'un problème si quelqu'un d'autre voit notre réponse.
+
+Pour classifier les différentes questions, on peut leur ajouter des tags, c'est à dire des mots clés qui permettent de trouver facilement le post. Par exemple, on a le tag "bug", ce tag peut être ajouté à tous les post qui demande à ce qu'on résolve un bug dans un programme. Ainsi, les codeur qui veulent aider d'autre peuvent faire une recherche des posts contenant ce tag et essayer d'aider l'auteur.
+
+Ainsi, on peut penser que certains tags sont plus susceptible d'attirer l'attention de gens voulant aider (comme le tag "bug", ou "help-center")
+
+C'est ce que nous allons nous demander : Quels tags sont le plus susceptibles de nous apporter des réponses ?
+
+Attention, on pourrait prendre cette étude pour un classement des tags à mettre pour être aider. Or non, il faut bien sûr que le tag corresponde au sujet (ou vous ne serez pas aidé), mais il faut bien vérifier que votre demande rentre dans les tags que nous allons voir car, si c'est le cas, vous pourrez être aidé plus rapidement.
+
+
+## répartition des tags dans stackoverflow
+
+La première chose que nous devrions étudier est la répartition des différents tags dans le site. Si certains sont plus utilisés que d'autres, il faudra prendre ça en compte dans nos statistiques. De plus nous pourrons voir si les tags qui apportent le plus de réponses sont ceux les plus utilisés ou au contraire l'inverse.
+
+```{r}
+tagsSortMostUsed <- tags[order(tags$Count, decreasing = TRUE),]
+# tableau de féquence des tags pour faire apparaître les 10 tags les plus utilisés
+tagsFreqPlus <- tagsSortMostUsed[1:10,]
+# affichage des piecharts
+pie(c(tagsFreqPlus$Count, sum(tags$Count) - sum(tagsFreqPlus$Count)), labels = c(row.names(tagsFreqPlus), "others"), main = "Graphique de répartition des 10 tags les plus utilisés", col = c("#0077ff", "#9e68f2", "#df54d6", "#ff46b0", "#ff4c87", "#ff665e", "#ff8636", "#ffa600"), radius = 1, cex=0.5)
+```
+
+Voici la répartition des tags. Ce graphique n'est pas très lisible, du au fait que l'on arrive très vite à des tags qui représentent moins de 1% en tout (ici, tous les tags qui représentent moins de 1% des posts sont dans "others"). Pour y vois plus clair, nous allons prendre uniquement les tags qui représentent plus de 1% (ceux qui sont affichés au dessus à part "others"). Comme la répartition ici n'est pas importante (puisque nous avons que les 10 premiers), nous allons faire un barlplot.
+
+```{r}
+barplot(tagsFreqPlus$Count ~ row.names(tagsFreqPlus), main = "Graphique du nombre de posts en fonction des tags contenus", col = c("#0077ff", "#9e68f2", "#df54d6", "#ff46b0", "#ff4c87", "#ff665e", "#ff8636", "#ffa600"), las=2, xlab="", ylab="")
+```
+Ce graphique est plus lisible, mais nous avons encore du réduire la police des labels pour qu'il le soit.
+
+On peut donc enfin voir les tags les plus utilisés, Cela pourra nous être utile par la suite pour nos analyses.
+
+
+## analyse du nombre de réponses en fonction des tags
+
+Maintenant, pour savoir quels tags sont susceptibles de nous aider, il faut savoir lesquels apportent le plus de réponses. En effet, plus les gens répondent à notre post, plus nous avons de chances de trouver la solution à notre problème. Pour cela, nous allons compter combien il existe de réponses pour chaque tags (comme il existe beaucoup de tags, nous n'allons charger que les 100 plus populaires) :
+
+```{r}
+# récupération du nombre de réponses par posts
+
+tagsSortMostUsed[,4] <- rep(0, nrow(tagsSortMostUsed))
+
+parsedTags = str_replace_all(tagsSortMostUsed$TagName, c("[\\+]"), "\\\\+")
+parsedTags = str_replace_all(parsedTags, "(\\-)", "\\\\-")
+
+get_posts_by_tag <- function(dataset, tags) {
+  regexes = paste("<", tags, ">", sep = "")
+  posts <- c()
+  for (r in regexes) {
+    posts <- subset(dataset, grepl(r, Tags))
+  }
+  return(posts)
+}
+
+for (tag in parsedTags[1:100]){
+  realTag = str_replace_all(tag, c("\\\\+"), "")
+  realTag = str_replace_all(realTag, "(\\\\-)", "\\-")
+  posts_with_tag = get_posts_by_tag(posts, tag)
+  tagsSortMostUsed[realTag,4] <- sum(posts_with_tag$AnswerCount)
+}
+
+```
+
+Une fois les données récupérées, on peut les afficher, il risque d'y avoir beaucoup de données à afficher, on va donc afficher les 10 premiers tags qui ont le plus de réponses, sous forme de barplot pour avoir une échelle de comparaison entre les tags :
+
+```{r}
+tagstenrep <- tagsSortMostUsed[order(tagsSortMostUsed$nb_rep, decreasing = TRUE),]
+barplot(tagstenrep$nb_rep[1:10] ~ row.names(tagstenrep[1:10,]), main = "Graphique des 10 tags avec le plus de réponses", col = c("#0077ff", "#9e68f2", "#df54d6", "#ff46b0", "#ff4c87", "#ff665e", "#ff8636", "#ffa600"), las=2, xlab="", ylab="")
+```
+
+On voit sur ce graphe les 10 tags les plus répondus, et il est très proche des 10 tags les plus utilisés. C'est normal, on compte les réponses sur les posts avec tel ou tel tag. Or plus il y a de posts avec un tag, plus ce tag aura de réponses. Il faut alors diviser le nombre de réponses avec un tag par le nombre de posts avec ce tag pour avoir quelque chose de concluant. Cependant, on voit des changement, comme sql qui est très répondu alors qu'il n'est pas dans les 10 les plus utilisés, ou python qui est le plus répondu alors qu'il n'est "que" 3ème dans les plus utilisés.
+
+Pour avoir une meilleure vue des plus répondu, on va diviser le nombre de réponse par tags par le nombre d'utilisation. Et afficher le graphique en baton des 10 tags les plus répondus, pondérés par le nombre de posts.
+
+```{r}
+# récupération du nombre de réponses pondérée par le nombre de posts
+tagsSortMostUsed[1:100, 5] <- (tagsSortMostUsed[1:100, 4] / tagsSortMostUsed[1:100, 2])
+
+tagstenpond <- tagsSortMostUsed[order(tagsSortMostUsed$rep_pond, decreasing = TRUE),]
+barplot(tagstenpond$rep_pond[1:10] ~ row.names(tagstenpond[1:10,]), main = "Graphique pondéré des tags avec le plus de réponses", col = c("#0077ff", "#9e68f2", "#df54d6", "#ff46b0", "#ff4c87", "#ff665e", "#ff8636", "#ffa600"), las=2, xlab = "", ylab = "")
+
+```
+
+En regardant le graphique, on voit que les tags les plus répondus sont beaucoup différents des tags les plus utilisés que ce que l'on aurait pu penser avec l'autre graphique. Il n'y a aucun tag en commum. Cependant, on voit quand même des choses populaires : par exemple on retrouve reactjs, qui est le framework front le plus mentionner (cf. le comparatif des framework front-end).
+
+Voici, en opposition la liste des tags avec le moins de réponses pondérées par le nombre de posts, pour voir quels sont les tags qui n'apportent pas beaucoup de réponses :
+
+```{r}
+tagsdata <- tagsSortMostUsed[1:100,]
+tagsdata[order(tagsdata$rep_pond),]
+```
+
+On voit dans ce tableau des tags les moins répondus quelque chose d'interessant : angularjs et python-2.7 sont des technologies vielles ou en tout cas plus utilisées, ce qui peut expliqué le faible taux de réponses (il est bon de rappeler que ces données sont celle de aout et septembre 2020). D'autres tags peu utilisés semble être du au fait qu'ils soient des concepts propriétaires (non en libre droit), comme iphone ou asp.net (qui appartient respactivement à apple et microsoft).
+
+Cependant, ce n'est pas parce que l'on a des réponses que l'on a notre solution au problème. Pour remédier à cela, il est possible, sur stackoverflow, de marquer une réponse comme étant celle qui nous a aidé. On peut donc regarder quels tags ont le plus de réponses acceptées.
+
+## analyse du nombre de réponses acceptées en fonction des tags
+
+Pour analyser cela, nous allons récupérer les posts qui ont une réponse acceptée, puis compter leurs tags et faire afficher un graphique de la fréquence de ces tags.
+
+```{r}
+tagsSortMostUsed[,6] <- rep(0, nrow(tagsSortMostUsed))
+posts_2$AcceptedAnswerCount <- posts_2$AcceptedAnswerId / posts_2$AcceptedAnswerId
+posts_2$AcceptedAnswerCount[is.na(posts_2$AcceptedAnswerCount)] <- 0
+
+parsedTags = str_replace_all(tagsSortMostUsed$TagName, c("[\\+]"), "\\\\+")
+parsedTags = str_replace_all(parsedTags, "(\\-)", "\\\\-")
+
+for (tag in parsedTags[1:100]){
+  realTag = str_replace_all(tag, c("\\\\+"), "")
+  realTag = str_replace_all(realTag, "(\\\\-)", "\\-")
+  posts_with_tag = get_posts_by_tag(posts, tag)
+  tagsSortMostUsed[realTag,6] <- sum(posts_with_tag$AcceptedAnswerCount)
+}
+
+tagstenaccepted <- tagsSortMostUsed[order(tagsSortMostUsed$nb_re_a, decreasing = TRUE),]
+barplot(tagstenaccepted$rep_pond[1:10] ~ row.names(tagstenaccepted[1:10,]), main = "Graphique des tags avec le plus de réponses acceptées", col = c("#0077ff", "#9e68f2", "#df54d6", "#ff46b0", "#ff4c87", "#ff665e", "#ff8636", "#ffa600"), las=2, xlab = "", ylab = "")
+```
+
+
+Sur ce graphique, on remarque des similudes avec le graphe des réponses générales. C'est normal, plus on a de réponses, plus on a de chance d'en avoir une acceptée. Cependant, on voit par exemple le langage R qui a beaucoup de réponses acceptées mais pas autant de réponses.
+
+Néanmoins, nous ne pondérons pas les réponses acceptées par le nombre de posts, ce qui peut encore fausser quelque peu les résultats. Pour remédier à cela, comme avant, on va diviser le nombre de réponses acceptées par le nombre de posts de chaque tags.
+
+```{r}
+# récupération du nombre de réponses acceptées pondérée par le nombre de posts
+for (i in row.names(tagsSortMostUsed[1:100,])){
+  tagsSortMostUsed[i, 7] <- tagsSortMostUsed[i, 6] / tagsSortMostUsed[i, 2]
+}
+
+tagstenpond <- tagsSortMostUsed[order(tagsSortMostUsed$rep_pond_a, decreasing = TRUE),]
+barplot(tagstenpond$rep_pond_a[1:10] ~ row.names(tagstenpond[1:10,]), main = "Graphique pondéré des tags avec le plus de réponses acceptées", col = c("#0077ff", "#9e68f2", "#df54d6", "#ff46b0", "#ff4c87", "#ff665e", "#ff8636", "#ffa600"), las=2, xlab = "", ylab = "")
+```
+
+On peut donc voir ici les 10 labels qui ont le plus de réponses acceptés. On a encore une fois des similitude avec le précédent graphique, mais l'on voit l'arriver de nouveaux tags comme docker ou web-services.
+
+Pour notre information, voici la liste des tags avec le moins de réponses acceptées. On voit qu'il y a beaucoup de tags qui sont très utilisés. On peut imaginer qu'un tag très utilisé a donc moins de chance d'avoir des réponses acceptées que les autres.
+
+```{r}
+tagsdata <- tagsSortMostUsed[1:100,]
+tagsdata[order(tagsdata$rep_pond_a),]
+```
+On peut voir que les tags avec le moins de réponses acceptées sont les tags avec le moins de réponses tout court (à une exception près). On peut donc en déduire que ces tags sont très peu utiles en 2020.
+
+
+Pour conclure, nous aimerions ajouté que cette étude ne sert à savoir quel tag mettre pour être aidé. Il faut toujours mettre des tags qui correspondent au besoin du post. Cependant nous avons pu voir les tags les plus importants, donc si votre post rentre dans l'un deux, il serait dommage de passer à côté
+
+
+# Implication dans le projet
+
+## Kilian DEBRAUX
+
+J'ai participé avec Anthony à écrire le parser, et j'ai aussi écrit le paragraphe décrivant le parser. 
+
+Pour ce qui est des statistiques, j'ai écrit la partie sur les l'importance des tags pour être aidé. J'ai trouvé que l'idée pouvait être utile pour savoir quels tags permettaient le plus de répondre à nos problèmes. Pour cela j'ai donc utiliser le parser XML pour convertir les fichiers sur les tags et sur les posts en csv et pouvoir les importer dans R studio. Ensuite, j'ai utiliser R afin de d'obtenir des statistiques sur les réponses par tags.  
+
+Pour cela j'ai beaucoup utilisé la documentation R pour rechercher des informations sur les fonctions. Notamment les fonction pour les Regex (str_match_all), ce qui permet de récupérer facilement une chaine de caractère au milieu d'un texte (ici de récupérer la valeur d'un tag entre chevron : "<tag>" qui devient "tag"). De plus cela m'a permis aussi de beaucoup utiliser les boucles, ce que je n'avait pas eu besoin de faire lors des TP.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

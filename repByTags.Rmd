@@ -25,14 +25,6 @@ data_tags$nb_re_a <- rep(0, nrow(data_tags))
 data_tags$rep_pond_a <- rep(0, nrow(data_tags))
 
 posts <- subset(data_posts, PostTypeId == 1)
-
-# récupération des tags sur chaque posts
-# tags <- c()
-# posts <- subset(data_posts, PostTypeId == 1)
-# toParseTags <- str_match_all(posts$Tags, "<([a-zA-Z0-9\\-]+)>")
-# for (toParseTag in toParseTags){
-#   tags <- c(tags, toParseTag[,2])
-# }
 ```
 
 # Problématique

@@ -1,0 +1,223 @@
+---
+title: "angular react and vue"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+DATASET_DIR="../datasets/"
+knitr::opts_chunk$set(echo = TRUE)
+library(dplyr)
+
+posts <- read.csv(paste(DATASET_DIR, 'Posts.csv', sep=""))
+# get only questions posts 
+questions <- filter(posts, PostTypeId == "1")
+# setup frmework regex
+
+colors = c("#0077ff",
+"#9e68f2",
+"#df54d6",
+"#ff46b0",
+"#ff4c87",
+"#ff665e",
+"#ff8636",
+"#ffa600")
+```
+
+```{r}
+
+angularRegex = c(" angular ", " angular([2-9]|10)? ")
+angularJsRegex = c(" angularjs ", " angular.js ")
+vueRegex = c(" vue ", " vue.js ", " vuejs ")
+reactRegex = c(" react ", " reactjs ", " react.js ")
+jqueryRegex = c(" jquery ", " ajax ")
+
+angularPosts <- c()
+for (r in angularRegex) {
+  angularPosts <- union(angularPosts, filter(questions, grepl(r, Body, ignore.case = TRUE))$Id)
+  angularPosts <- union(angularPosts, filter(questions, grepl(r, Title, ignore.case = TRUE))$Id)
+}
+
+reactPosts <- c()
+for (r in reactRegex) {
+  reactPosts <- union(reactPosts, filter(questions, grepl(r, Body, ignore.case = TRUE))$Id)
+  reactPosts <- union(reactPosts, filter(questions, grepl(r, Title, ignore.case = TRUE))$Id)
+}
+
+
+vuePosts <- c()
+for (r in vueRegex) {
+  vuePosts <- union(vuePosts, filter(questions, grepl(r, Body, ignore.case = TRUE))$Id)
+  vuePosts <- union(vuePosts, filter(questions, grepl(r, Title, ignore.case = TRUE))$Id)
+}
+
+angularJsPosts <- c()
+for (r in angularJsRegex) {
+  angularJsPosts <- union(angularJsPosts, filter(questions, grepl(r, Body, ignore.case = TRUE))$Id)
+  angularJsPosts <- union(angularJsPosts, filter(questions, grepl(r, Title, ignore.case = TRUE))$Id)
+}
+
+jqueryPosts <- c()
+for (r in jqueryRegex) {
+  jqueryPosts <- union(jqueryPosts, filter(questions, grepl(r, Body, ignore.case = TRUE))$Id)
+  jqueryPosts <- union(jqueryPosts, filter(questions, grepl(r, Title, ignore.case = TRUE))$Id)
+}
+
+pie(c(
+  length(angularPosts),
+  length(angularJsPosts),
+  length(reactPosts),
+  length(vuePosts),
+  length(jqueryPosts)
+  ), c("Angular", "Angular.js", "React", "Vue.js", "JQuery"), col = colors)
+```
+
+```{r}
+laravelRegex = c("laravel")
+symphonieRegex = c("symphony")
+flaskRegex = c("flask")
+djangoRegex = c("django")
+nodeExpressRegex = c("express")
+springRegex = c("spring")
+
+laravelPosts <- c()
+for (r in laravelRegex) {
+  laravelPosts <- union(laravelPosts, filter(questions, grepl(r, Body, ignore.case = TRUE))$Id)
+  laravelPosts <- union(laravelPosts, filter(questions, grepl(r, Title, ignore.case = TRUE))$Id)
+}
+
+flaskPosts <- c()
+for (r in flaskRegex) {
+  flaskPosts <- union(flaskPosts, filter(questions, grepl(r, Body, ignore.case = TRUE))$Id)
+  flaskPosts <- union(flaskPosts, filter(questions, grepl(r, Title, ignore.case = TRUE))$Id)
+}
+
+symphoniePosts <- c()
+for (r in vueRegex) {
+  symphonieRegex <- union(symphonieRegex, filter(questions, grepl(r, Body, ignore.case = TRUE))$Id)
+  symphonieRegex <- union(symphonieRegex, filter(questions, grepl(r, Title, ignore.case = TRUE))$Id)
+}
+
+nodePosts <- c()
+for (r in nodeExpressRegex) {
+  nodePosts <- union(nodePosts, filter(questions, grepl(r, Body, ignore.case = TRUE))$Id)
+  nodePosts <- union(nodePosts, filter(questions, grepl(r, Title, ignore.case = TRUE))$Id)
+}
+
+springPosts <- c()
+for (r in springRegex) {
+  springPosts <- union(springPosts, filter(questions, grepl(r, Body, ignore.case = TRUE))$Id)
+  springPosts <- union(springPosts, filter(questions, grepl(r, Title, ignore.case = TRUE))$Id)
+}
+
+djangoPosts <- c()
+for (r in djangoRegex) {
+  djangoPosts <- union(djangoPosts, filter(questions, grepl(r, Body, ignore.case = TRUE))$Id)
+  djangoPosts <- union(djangoPosts, filter(questions, grepl(r, Title, ignore.case = TRUE))$Id)
+}
+
+pie(c(
+  length(laravelPosts),
+  length(flaskPosts),
+  length(symphoniePosts),
+  length(nodePosts),
+  length(springPosts),
+  length(djangoPosts)
+  ), c("Laravel", "Flask", "Symphony", "Node Express", "Spring", "Django"), col = colors)
+```
+
+```{r}
+ubuntuRegex = c("ubuntu")
+fedoraRegex = c("fedora")
+centosRegex = c("centos")
+redhatRegex = c("redhat")
+poposRegex = c("popos", "pop.os", "pop os")
+debianRegex = c("debian")
+raspbianRegex = c("raspbian")
+
+ubuntuPosts <- c()
+for (r in ubuntuRegex) {
+  ubuntuPosts <- union(ubuntuPosts, filter(questions, grepl(r, Body, ignore.case = TRUE))$Id)
+  ubuntuPosts <- union(ubuntuPosts, filter(questions, grepl(r, Title, ignore.case = TRUE))$Id)
+}
+
+fedoraPosts <- c()
+for (r in fedoraRegex) {
+  fedoraPosts <- union(fedoraPosts, filter(questions, grepl(r, Body, ignore.case = TRUE))$Id)
+  fedoraPosts <- union(fedoraPosts, filter(questions, grepl(r, Title, ignore.case = TRUE))$Id)
+}
+
+centosPosts <- c()
+for (r in centosRegex) {
+  centosPosts <- union(centosPosts, filter(questions, grepl(r, Body, ignore.case = TRUE))$Id)
+  centosPosts <- union(centosPosts, filter(questions, grepl(r, Title, ignore.case = TRUE))$Id)
+}
+
+redhatPosts <- c()
+for (r in redhatRegex) {
+  redhatPosts <- union(redhatPosts, filter(questions, grepl(r, Body, ignore.case = TRUE))$Id)
+  redhatPosts <- union(redhatPosts, filter(questions, grepl(r, Title, ignore.case = TRUE))$Id)
+}
+
+poposPosts <- c()
+for (r in poposRegex) {
+  poposPosts <- union(poposPosts, filter(questions, grepl(r, Body, ignore.case = TRUE))$Id)
+  poposPosts <- union(poposPosts, filter(questions, grepl(r, Title, ignore.case = TRUE))$Id)
+}
+
+debianPosts <- c()
+for (r in debianRegex) {
+  debianPosts <- union(debianPosts, filter(questions, grepl(r, Body, ignore.case = TRUE))$Id)
+  debianPosts <- union(debianPosts, filter(questions, grepl(r, Title, ignore.case = TRUE))$Id)
+}
+
+raspbianPosts <- c()
+for (r in raspbianRegex) {
+  raspbianPosts <- union(raspbianPosts, filter(questions, grepl(r, Body, ignore.case = TRUE))$Id)
+  raspbianPosts <- union(raspbianPosts, filter(questions, grepl(r, Title, ignore.case = TRUE))$Id)
+}
+
+pie(c(
+  length(ubuntuPosts),
+  length(fedoraPosts),
+  length(centosPosts),
+  length(redhatPosts),
+  length(poposPosts),
+  length(debianPosts),
+  length(raspbianPosts)
+), c("Ubuntu", "Fedora", "Centos", "RedHat", "Pop Os", "Debian", "Raspbian"),
+col = colors)
+```
+
+
+## Evolution de la popularité de react au court du temps
+
+```{r}
+reactPosts <- c()
+for (r in reactRegex) {
+  reactPosts <- union(reactPosts, filter(questions, grepl(r, Body, ignore.case = TRUE)))
+  reactPosts <- union(reactPosts, filter(questions, grepl(r, Title, ignore.case = TRUE)))
+}
+
+View(reactPosts)
+
+
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

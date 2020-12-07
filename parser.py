@@ -17,7 +17,7 @@ def xmltocsv(filename, columns):
         attributes = row.attrib
         for col in columns:
             if col in attributes:
-                line += attributes[col]
+                line += attributes[col].replace(",", " ").replace("\n", " ")
             line+=","
         results.append(line[:-1] + "\n")
     

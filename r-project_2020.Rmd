@@ -17,19 +17,19 @@ knitr::opts_chunk$set(echo = TRUE)
 
 ![logo](logo.png)
 
-Stack overflow est un site web de type forum permettant de poser ses questions à une communauté. Celle ci est principalement conçu pour les développeurs. Nous avons obtennu nos données depuis __[Les archives de stackexchange](https://archive.org/details/stackexchange)__ (https://archive.org/details/stackexchange). Notre jeu de donnée a été réduit pour eêtre utilisable à 300 000 données réparties sur 3 mois entre Août et Septembre 2020.
+Stack overflow est un site web de type forum permettant de poser ses questions à une communauté. Celle ci est principalement composée de développeurs. Nous avons obtennu nos données depuis __[Les archives de stackexchange](https://archive.org/details/stackexchange)__ (https://archive.org/details/stackexchange). Notre jeu de donnée a été réduit à 300 000 donnéespour être utilisable  réparties sur 3 mois entre Août et Septembre 2020.
 
 
 > Nous avons rencontré des problèmes avec notre jeu de donnée. 
-> Nous avons commencer à expliter un jeu de donnée de la même source mais il s'est révélé incohérent et peu réaliste. 
-> Nous avons hélas mis beaucoup de temps à le remarquer et nous avons alors été confronté à un secoind problème.
-> Le fichier que nous voulinbs était bien sur cette plateforme mais sous un autre nom et hélas u autre poids. 
-> Nous nous sommes donc retrouvé avec une archive de 15.6Go à télécharger avec de faibles connexions. 
-> Le premier téléchargement a échoué à la toute fin après de nombreuses heures mais nous avons rééssayé enb passant cette fois ci par un *curl* et nous avons enfin eu les données dans un fichier de pus de 80 Go, nous l'avons bien sûr réduit.
+> Nous avons commencer à exploiter un jeu de donnée de la même source mais il s'est révélé incohérent et peu réaliste. 
+> Nous avons hélas mis beaucoup de temps à le remarquer et nous avons alors été confronté à un second problème.
+> Le fichier que nous voulions était bien sur cette plateforme mais sous un autre nom et hélas u autre poids. 
+> Nous nous sommes donc retrouvés avec une archive de 15.6Go à télécharger avec de faibles connexions. 
+> Le premier téléchargement a échoué à la toute fin après de nombreuses heures mais nous avons rééssayé en passant cette fois ci par un *curl* et nous avons enfin eu les données dans un fichier de plus de 80 Go; nous l'avons bien sûr réduit.
 > Nous avons eu très peu de temps entre ce moment et l'heure de rendu, nous esperons que vous pourrez en prendre considération pendant votre correction. Nous tenons à nous excuser pour la gêne occasionnée
 
 ## Les technologies populaires
-Cette fonction permet de récupérer des posts en fonctions de tags mis sous forme de vecteur de regex
+Cette fonction permet de récupérer des posts en fonction de tags mis sous forme de vecteur de regex
 ```{r}
 get_posts_by_tag <- function(dataset, tags) {
   regexes = paste("<", tags, ">", sep = "")
@@ -62,10 +62,10 @@ otherValue = sum(lessPopularTags$Count)
 pie(c(mostPopularTags$Count, otherValue), c(mostPopularTags$TagName, "Others"))
 
 ```
-Nous avons pu récupérer le contenue de ce jeu de donnée car bien plus légé que le fichier principal. Nous pouvons constater par ce graphique que les tags les plus présents concèrenent essentielement les technologies du web (javascript, php, html et css; les autres technologies peuvent aussi servir en web comme le java avec le framework Spring ou le c# avec .net). Nous avons choisi de n'en nommer que 10 pour des soucis de clarté. Ce diagramme nous permet de voir aisément les problématiques principales de la plateforme.
+Nous avons pu récupérer le contenue de ce jeu de donnée car bien plus légé que le fichier principal. Nous pouvons constater par ce graphique que les tags les plus présents concèrenent essentielement les technologies du web (**Javascript**, **Php**, **HTML** et **CSS**; les autres technologies peuvent aussi servir en web comme le **Java** avec le framework *Spring* ou le **C#** avec *.net*). Nous avons choisi de n'en nommer que 10 pour des soucis de clarté. Ce diagramme nous permet de voir aisément les problématiques principales de la plateforme.
 
 ### Les frameworks front-end
-Les technologies évoluant contement en raison des besoins différents de chaque entreprise, plusieurs d'entre elles rendent disponibles des frameworks. Côté Front-End, on en retrouve 5 principaux : Angular, Angular.js (il est important de les distinguer car ils n'ont pas du tout le même fonctionnement), React.js, Vue.js et JQuery. Nous voulons maintenant définir un "leader du marché" et montrer leurs différences de popularité.
+Les technologies évoluant contement en raison des besoins différents de chaque entreprise, plusieurs d'entre elles rendent disponibles des frameworks. Côté Front-End, on en retrouve 5 principaux : **Angular**, **Angular.js** (il est important de les distinguer car ils n'ont pas du tout le même fonctionnement), **React.js**, **Vue.js** et **JQuery**. Nous voulons maintenant définir un "leader du marché" et montrer leurs différences de popularité.
 
 ```{r}
 
@@ -200,19 +200,6 @@ pie(i, l)
 
 On remarque directement la dominance des ide de microsoft **Visual Studio** et **Visual Studio Code**. Le premier est essentiellement utilisé pourdévelopper en C, C# et C++ et le second est de très loin l'ide le plus populaire. Il peut être utilisé pour pratiquement tous les langages et frameworks et est très adaptable avec de nombreux plugins pour utiliser Git, Docker, R, ... In tellij est aussi très populaire, dans a version IDEA il peut même être plus puisant que Visual Studio Code sous certains aspets notement dans le dévelppement d'appliations regroupant plusieurs technologies comme une API en Spring, un client en React et une base de donnée PostgreSQL, cependant il est payant et donc moins utilisé. Eclipse est très utilisé pour le java mais l'entreprise a de moins en moins de succès et cet ide est de moins en mois utilisé. Atom et Visual Studio Code ressemblent à Visual Studio Code mais permettent moins de choses.
 
-
-```{r}
-
-postsByTag = c()
-parsedTags = str_replace_all(tags$TagName, c("[\\+]"), "\\\\+")
-parsedTags = str_replace_all(parsedTags, "(\\-)", "\\-")
-for (tag in parsedTags) {
-  tag <- get_posts_by_tag(questions,c(tag))
-  postsByTag[,tag] <- 
-}
-View(postsByTag)
-
-```
 
 
 

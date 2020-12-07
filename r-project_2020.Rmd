@@ -167,7 +167,7 @@ l <- c("C", "C#", "C++", "Python", "Java", "Dart", "Javascript", "Typescript", "
 pie(i, l)
 ```
 
-<!-- TODO : conclude -->
+On les langages les plus présents sur ce diagramme sont le **Python** et le **Javascript**. Ce sont des langages très polivalents, le **Javascript** est un obligtoire du web Front-End et peut être utilisé également comme Back-End. De la même manière le **Python** peu être utilisé aussi bien pour du web Back-End, de l'automatisation, de l'inteligence artificielle... Le java a pour aventage qu'un même code peut être utilisable sur Windows, Linux et Mac, de plus c'est un langage natif pour Android. Le **C#** est utilisé en web avec .net mais aussi dans le monde du jeu vidéo. Le php est encore massivement utilisé en web Back-End même si la tendance est largement en baisse depuis de nombreuses années au profit du **Java* avec *Spring* , du **Python** avec *Django*, du **Javascript** avec *Node...*
 
 ### Les IDE (Environnement de développement)
 ```{r}
@@ -199,5 +199,34 @@ pie(i, l)
 ```
 
 On remarque directement la dominance des ide de microsoft **Visual Studio** et **Visual Studio Code**. Le premier est essentiellement utilisé pourdévelopper en C, C# et C++ et le second est de très loin l'ide le plus populaire. Il peut être utilisé pour pratiquement tous les langages et frameworks et est très adaptable avec de nombreux plugins pour utiliser Git, Docker, R, ... In tellij est aussi très populaire, dans a version IDEA il peut même être plus puisant que Visual Studio Code sous certains aspets notement dans le dévelppement d'appliations regroupant plusieurs technologies comme une API en Spring, un client en React et une base de donnée PostgreSQL, cependant il est payant et donc moins utilisé. Eclipse est très utilisé pour le java mais l'entreprise a de moins en moins de succès et cet ide est de moins en mois utilisé. Atom et Visual Studio Code ressemblent à Visual Studio Code mais permettent moins de choses.
+
+
+```{r}
+
+postsByTag = c()
+parsedTags = str_replace_all(tags$TagName, c("[\\+]"), "\\\\+")
+parsedTags = str_replace_all(parsedTags, "(\\-)", "\\-")
+for (tag in parsedTags) {
+  tag <- get_posts_by_tag(questions,c(tag))
+  postsByTag[,tag] <- 
+}
+View(postsByTag)
+
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 

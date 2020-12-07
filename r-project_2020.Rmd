@@ -25,7 +25,7 @@ Stack overflow est un site web de type forum permettant de poser ses questions �
 > Nous avons hélas mis beaucoup de temps à le remarquer et nous avons alors été confronté à un secoind problème.
 > Le fichier que nous voulinbs était bien sur cette plateforme mais sous un autre nom et hélas u autre poids. 
 > Nous nous sommes donc retrouvé avec une archive de 15.6Go à télécharger avec de faibles connexions. 
-> Le premier téléchargement a échoué à la toute fin après de nombreuses heures mais nous avons rééssayé enb passant cette fois ci par un *curl* et nous avons enfin eu les données.
+> Le premier téléchargement a échoué à la toute fin après de nombreuses heures mais nous avons rééssayé enb passant cette fois ci par un *curl* et nous avons enfin eu les données dans un fichier de pus de 80 Go, nous l'avons bien sûr réduit.
 > Nous avons eu très peu de temps entre ce moment et l'heure de rendu, nous esperons que vous pourrez en prendre considération pendant votre correction. Nous tenons à nous excuser pour la gêne occasionnée
 
 ## Les technologies populaires
@@ -169,8 +169,35 @@ pie(i, l)
 
 <!-- TODO : conclude -->
 
+### Les IDE (Environnement de développement)
+```{r}
+
+vscRegex = c("visual\\-studio\\-code")
+
+vsRegex = c("visual\\-studio")
+
+eclipseRegex = c("eclipse")
+
+atomRegex = c("atom\\-editor")
+
+intellijRegex = c("intellij\\-idea")
+
+sublRegex = c("sublimetext[1-3]?")
 
 
+vscPosts <- get_posts_by_tag(questions, vscRegex)
+vsPosts <- get_posts_by_tag(questions, vsRegex)
+eclipsePosts <- get_posts_by_tag(questions, eclipseRegex)
+atomPosts <- get_posts_by_tag(questions, atomRegex)
+intellijPosts <- get_posts_by_tag(questions, intellijRegex)
+sublPosts <- get_posts_by_tag(questions, sublRegex)
 
+i <- c(length(vscPosts), length(vsPosts), length(eclipsePosts), length(atomPosts), length(intellijPosts), length(sublPosts))
+l <- c("Visual Studio Code", "Visual Studio", "Eclipse", "Atom", "Intellij", "Sublim Text")
+
+pie(i, l)
+```
+
+On remarque directement la dominance des ide de microsoft **Visual Studio** et **Visual Studio Code**. Le premier est essentiellement utilisé pourdévelopper en C, C# et C++ et le second est de très loin l'ide le plus populaire. Il peut être utilisé pour pratiquement tous les langages et frameworks et est très adaptable avec de nombreux plugins pour utiliser Git, Docker, R, ... In tellij est aussi très populaire, dans a version IDEA il peut même être plus puisant que Visual Studio Code sous certains aspets notement dans le dévelppement d'appliations regroupant plusieurs technologies comme une API en Spring, un client en React et une base de donnée PostgreSQL, cependant il est payant et donc moins utilisé. Eclipse est très utilisé pour le java mais l'entreprise a de moins en moins de succès et cet ide est de moins en mois utilisé. Atom et Visual Studio Code ressemblent à Visual Studio Code mais permettent moins de choses.
 
 

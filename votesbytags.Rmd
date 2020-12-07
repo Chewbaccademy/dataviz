@@ -1,0 +1,73 @@
+---
+title: "Votes by tags"
+author: "Kilian DEBRAUX Anthony QUERE"
+date: "05/12/2020"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(stringr)
+
+
+data_posts <- read.csv("../datasets/posts.csv", sep=";")
+data_votes <- read.csv("../datasets/votes.csv", sep=";")
+data_tags <- read.csv("../datasets/Tags.csv", sep=";")
+
+# tableau avec les types de votes
+typesVotesLib = c("AcceptedByOriginator", "UpMod", "DownMod", "Offensive", "Favorite", "Close", "Reopen", "BountyStart", "BountyClose", "Deletion", "Undeletion", "Spam", "InformModerator")
+typesVotesId = c(1,2,3,4,5,6,7,8,9,10,11,12,13)
+data_type_votes <- data.frame(typesVotesId, typesVotesLib)
+names(data_type_votes) <- c("Id", "Libelle")
+
+# tableau final repertoriant le nombre de type de vote en fonction des tags
+data_final = data.frame(c(1:nrow(data_tags)), c(1:nrow(data_tags)), c(1:nrow(data_tags)), c(1:nrow(data_tags)), c(1:nrow(data_tags)), c(1:nrow(data_tags)), c(1:nrow(data_tags)), c(1:nrow(data_tags)), c(1:nrow(data_tags)), c(1:nrow(data_tags)), c(1:nrow(data_tags)), c(1:nrow(data_tags)), c(1:nrow(data_tags)))
+row.names(data_final) <- data_tags$TagName
+names(data_final) <- data_type_votes$Libelle
+
+# mise à 0 du tableau
+for (i in 1:nrow(data_final)){
+  for (j in 1:ncol(data_final)){
+    data_final[i,j] = 0
+  }
+}
+
+```
+
+```{r}
+# remplissage du tableau
+
+
+# for(i in 1:nrow(data_votes)){
+#   if(data_votes$VoteTypeId[i] < 14){
+#     voteType = data_type_votes$Libelle[data_votes$VoteTypeId[i]]
+#     post = subset(data_posts, Id == data_votes$PostId[i])
+#     tagsMat <- str_match_all(post$Tags, "<([a-zA-Z0-9\\-]+)>")
+#     if(length(tagsMat) != 0){
+#       tags = tagsMat[[1]][,2]
+#       for(tag in tags){
+#         data_final[tag, voteType] = data_final[tag, voteType] + 1
+#       }
+#     }
+#   }
+# }
+```
+
+```{r}
+stars(data_final, cex=1, flip.labels=T, key.loc =c(10, 2))
+```
+
+# Tests non aboutis
+
+## Nombre de chaque type de vote par tags
+
+Dans stack overflow, il est possible de voter pour un post pour plusieurs raisons : l'apprécier/le déprécier (équivalent de j'aime/j'aime pas), le signaker (voter spam)...
+
+Nous voulions voir pour chaque tags (catégorie de post) le nombre de chaque type de vote qu'il reucueillais (pour voir si des tags étati souvent dépréciés, signalés spam, apréciés...)  
+
+Cependant, nous nous sommes confronté à plusieurs difficultés : 
+
+1. Il y avait plus de 2 000 000 de votes enregistrés, ce qui faisait beaucoup trop de données pour notre programme
+2. Il y avait beaucoup de tags. Or une étoile représentant un tag, il y avait beaucoup trop d'étoiles et la représentation devenait illisible (pour obtenir un graphique, nous avons testé sur les 10 000 premiers)
+
+Devant ces 2 difficultés, nous avons abandonné la représentation de cette donnée. Voici quand même le code que nous avons écrit pour obtenir ce comparatif

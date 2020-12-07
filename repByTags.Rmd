@@ -1,0 +1,200 @@
+---
+title: "Comment être aidé"
+author: "Kilian DEBRAUX Anthony QUERE"
+date: "06/12/2020"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+library(dplyr)
+
+# récupération des données sur les tags et les posts
+data_tags <- read.csv("../datasets/tags.csv", sep=";")
+data_posts <- read.csv("../datasets/posts.csv", sep=";")
+
+# mise en forme des données
+row.names(data_tags) <- data_tags$TagName
+data_tags$nb <- rep(0, nrow(data_tags))
+data_tags$nb_rep <- rep(0, nrow(data_tags))
+data_tags$rep_pond <- rep(0, nrow(data_tags))
+data_tags$nb_re_a <- rep(0, nrow(data_tags))
+data_tags$rep_pond_a <- rep(0, nrow(data_tags))
+
+# récupération des tags sur chaque posts
+tags <- c()
+posts <- subset(data_posts, PostTypeId == 1)
+toParseTags <- str_match_all(posts$Tags, "<([a-zA-Z0-9\\-]+)>")
+for (toParseTag in toParseTags){
+  tags <- c(tags, toParseTag[,2])
+}
+
+# remplissage du nombre de tags présent
+for (tag in row.names(freq(tags))){
+  data_tags[tag, 3] <- freq(tags)[tag, 1]
+}
+```
+
+# Problématique
+
+Sur stackoverflow, on pose une question, et des gens nous répondent. C'est ainsi que l'on peut être aidé dans la résolution d'un problème si quelqu'un d'autre voit notre réponse.
+
+Pour classifier les différentes questions, on peut leur ajouter des tags, c'est à dire des mots clés qui permettent de trouver facilement le post. Par exemple, on a le tag "bug", ce tag peut être ajouté à tous les post qui demande à ce qu'on résolve un bug dans un programme. Ainsi, les codeur qui veulent aider d'autre peuvent faire une recherche des posts contenant ce tag et essayer d'aider l'auteur.
+
+Ainsi, on peut penser que certains tags sont plus susceptible d'attirer l'attention de gens voulant aider (comme le tag "bug", ou "help-center")
+
+C'est ce que nous allons nous demander : Quels tags sont le plus susceptibles de nous apporter des réponses ?
+
+Attention, on pourrait prendre cette étude pour un classement des tags à mettre pour être aider. Or non, il faut bien sûr que le tag corresponde au sujet (ou vous ne serez pas aidé), mais il faut bien vérifier que votre demande rentre dans les tags que nous allons voir car, si c'est le cas, vous pourrez être aidé plus rapidement.
+
+
+## répartition des tags dans stackoverflow
+
+La première chose que nous devrions étudier est la répartition des différents tags dans le site. Si certains sont plus utilisés que d'autres, il faudra prendre ça en compte dans nos statistiques. De plus nous pourrons voir si les tags qui apportent le plus de réponses sont ceux les plus utilisés ou au contraire l'inverse.
+
+```{r}
+# tableau de féquence des tags pour faire apparaître les 10 tags les plus utilisés
+tagsFreqPlus <- freq(tags, sort = "dec")[1:10,]
+# tableau de féquence des tags pour faire apparaître les 10 tags les moins utilisés
+tagsFreqMinus <- freq(tags, sort = "inc")[1:10,]
+# affichage des piecharts
+pie(c(tagsFreqPlus$`%`, 100 - sum(tagsFreqPlus$`%`)), labels = c(row.names(tagsFreqPlus), "others"), main = "Graphique de répartition des 10 tags les plus utilisés", col = c("#0077ff", "#9e68f2", "#df54d6", "#ff46b0", "#ff4c87", "#ff665e", "#ff8636", "#ffa600"), radius = 1)
+```
+
+Voici la répartition des tags. Ce graphique n'est pas très lisible, du au fait que l'on arrive très vite à des tags qui représentent moins de 1% en tout (ici, tous les tags qui représentent moins de 1% des posts sont dans "others"). Pour y vois plus clair, nous allons prendre uniquement les tags qui représentent plus de 1% (ceux qui sont affichés au dessus à part "others") et voir leur répartition entre eux
+
+```{r}
+pie(tagsFreqPlus$`%`, labels = row.names(tagsFreqPlus), main = "Graphique de répartition des tags parmis les 10 premiers", col = c("#0077ff", "#9e68f2", "#df54d6", "#ff46b0", "#ff4c87", "#ff665e", "#ff8636", "#ffa600"), radius = 1, cex=0.7)
+```
+Ce graphique est plus lisible, mais nous avons encore du réduire la police des labels pour qu'il le soit.
+
+On peut donc enfin voir les tags les plus utilisés, Cela pourra nous être utile par la suite pour nos analyses.
+
+Nous disposons aussi du tableau de fréquence des tags du moins utilisé au plus utilisé (le représentation sous forme de graphique est inutile)
+
+```{r}
+tagsFreqMinus
+```
+
+
+## analyse du nombre de réponses en fonction des tags
+
+Maintenant, pour savoir quels tags sont susceptibles de nous aider, il faut savoir lesquels apportent le plus de réponses. En effet, plus les gens répondent à notre post, plus nous avons de chances de trouver la solution à notre problème. Pour cela, nous allons compter combien il existe de réponses pour chaque tags :
+
+```{r}
+# récupération des réponses groupée par post auquel elles répondent
+postAnswers <- subset(data_posts, PostTypeId == 2)
+answers <- split(postAnswers, postAnswers$ParentId)
+
+# ajout du nombre de réponse par tag dans la data table
+for (ans in answers){
+  for (tag in str_match_all(subset(posts, Id == ans$ParentId[1])$Tags, "<([a-zA-Z0-9\\-]+)>")[[1]][,2]){
+    data_tags[tag, 4] = data_tags[tag, 4] + 1
+  }
+}
+```
+
+Une fois les données récupérées, on peut les afficher, il risque d'y avoir beaucoup de données à afficher, on va donc afficher les 10 premiers tags qui ont le plus de réponses :
+
+```{r}
+tagstenrep <- data_tags[order(data_tags$nb_rep, decreasing = TRUE),]
+pie(tagstenrep$nb_rep[1:10], labels = row.names(tagstenrep[1:10,]), main = "Graphique des tags avec le plus de réponses", col = c("#0077ff", "#9e68f2", "#df54d6", "#ff46b0", "#ff4c87", "#ff665e", "#ff8636", "#ffa600"), radius = 1, cex=0.7)
+```
+
+On voit que ce graphe est extrêmement proche du premier graphique sur la répartition. C'est normal, on compte les réponses sur les posts avec tel ou tel tag. Or plus il y a de posts avec un tag, plus ce tag aura de réponses. Il faut alors diviser le nombre de réponses avec un tag par le nombre de posts avec ce tag pour avoir quelque chose de concluant. Comme suit :
+
+```{r}
+# récupération du nombre de réponses pondérée par le nombre de posts
+for (i in row.names(data_tags)){
+  data_tags[i, 5] <- data_tags[i, 4] / data_tags[i, 3]
+}
+
+tagstenpond <- data_tags[order(data_tags$rep_pond, decreasing = TRUE),]
+barplot(tagstenpond$rep_pond[1:20] ~ row.names(tagstenpond[1:20,]), main = "Graphique pondéré des tags avec le plus de réponses", col = c("#0077ff", "#9e68f2", "#df54d6", "#ff46b0", "#ff4c87", "#ff665e", "#ff8636", "#ffa600"), las=2, xlab = "", ylab = "")
+
+```
+
+En voyant le graphique, on voit que les écarts sont très peu visibles. On voit les 20 premiers tags/reponses et ils ont tous la même valeur. On a donc les tags les plus utiles pour avoir une réponse. On va aussi afficher la liste des 20 pires ratio tags/réponses, pour savoir lesquels ne sont pas très utiles pour se faire aider
+
+```{r}
+tagsworst <- data_tags[order(data_tags$rep_pond),]
+tagsworst[1:10,]
+```
+
+Cependant, ce n'est pas parce que l'on a des réponses que l'on a notre solution au problème. Pour remédier à cela, il est possible, sur stackoverflow, de marquer une réponse comme étant celle qui nous a aidé. On peut donc regarder quels tags ont le plus de réponses acceptées.
+
+## analyse du nombre de réponses acceptées en fonction des tags
+
+Pour analyser cela, nous allons récupérer les posts qui ont une réponse acceptée, puis compter leurs tags et faire afficher un graphique de la fréquence de ces tags.
+
+```{r}
+postsWithAccepted <- subset(posts, !is.na(AcceptedAnswerId))
+toParseTags <- str_match_all(posts$Tags, "<([a-zA-Z0-9\\-]+)>")
+for (toParseTag in toParseTags){
+  tags <- c(tags, toParseTag[,2])
+}
+
+for (tag in row.names(freq(tags))){
+  data_tags[tag, 6] <- freq(tags)[tag, 1]
+}
+
+tagstenaccepted <- data_tags[order(data_tags$nb_re_a, decreasing = TRUE),]
+pie(tagstenaccepted$nb_re_a[1:10], labels = row.names(tagstenaccepted[1:10,]), main = "Graphique des tags avec le plus de réponses acceptés", col = c("#0077ff", "#9e68f2", "#df54d6", "#ff46b0", "#ff4c87", "#ff665e", "#ff8636", "#ffa600"), radius = 1, cex=0.7)
+```
+
+
+Cependant, ici, comme avec les réponses en entier, le nombre de posts contenant les tags influe sur le résultat. On a encore le même graphique que le 1er.
+
+Pour remédier à cela, comme avant, on va diviser le nombre de réponses acceptées par le nombre de posts de chaque tags.
+
+```{r}
+# récupération du nombre de réponses acceptées pondérée par le nombre de posts
+for (i in row.names(data_tags)){
+  data_tags[i, 7] <- data_tags[i, 6] / data_tags[i, 3]
+}
+
+tagstenpond <- data_tags[order(data_tags$rep_pond_a, decreasing = TRUE),]
+barplot(tagstenpond$rep_pond_a[1:20] ~ row.names(tagstenpond[1:20,]), main = "Graphique pondéré des tags avec le plus de réponses", col = c("#0077ff", "#9e68f2", "#df54d6", "#ff46b0", "#ff4c87", "#ff665e", "#ff8636", "#ffa600"), las=2, xlab = "", ylab = "")
+```
+
+On peut donc voir ici les 20 labels qui ont le plus de réponses acceptés. Mais l'on ne voit pas de différences entre eux.
+
+Pour notre information, voici la liste des tags avec le moins de réponses acceptées. On voit qu'il y a beaucoup de tags qui sont très utilisés. On peut imaginer qu'un tag très utilisé a donc moins de chance d'avoir des réponses acceptées que les autres.
+
+```{r}
+tagsworst <- data_tags[order(data_tags$rep_pond_a),]
+tagsworst[1:10,]
+```
+
+
+# Implication dans le projet
+
+## Kilian DEBRAUX
+
+J'ai participé avec Anthony à écrire le parser, et j'ai aussi écrit le paragraphe décrivant le parser. 
+
+Pour ce qui est des statistiques, j'ai écrit la partie sur les l'importance des tags pour être aidé. J'ai trouvé que l'idée pouvait être utile pour savoir quels tags permettaient le plus de répondre à nos problèmes. Pour cela j'ai donc utiliser le parser XML pour convertir les fichiers sur les tags et sur les posts en csv et pouvoir les importer dans R studio. Ensuite, j'ai utiliser R afin de d'obtenir des statistiques sur les réponses par tags.  
+
+Pour cela j'ai beaucoup utilisé la documentation R pour rechercher des informations sur les fonctions. Notamment les fonction pour les Regex (str_match_all), ce qui permet de récupérer facilement une chaine de caractère au milieu d'un texte (ici de récupérer la valeur d'un tag entre chevron : "<tag>" qui devient "tag"). De plus cela m'a permis aussi de beaucoup utiliser les boucles, ce que je n'avait pas eu besoin de faire lors des TP.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
